@@ -4,6 +4,12 @@ gdrive-audit
 Attempt to generate report of all files shared by a Google Apps users to 
 "anyone" or to users outside a list of whitelisted domains.
 
+Requirements
+------------
+
+Python 2.7
+PyDrive package for Google authentication.
+
 To do
 -----
 

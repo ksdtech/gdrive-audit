@@ -7,8 +7,8 @@ Attempt to generate report of all files shared by a Google Apps users to
 Requirements
 ------------
 
-Python 2.7
-PyDrive package for Google authentication.
+- Python 2.7
+- PyDrive package for Google authentication.
 
 To do
 -----

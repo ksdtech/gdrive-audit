@@ -112,9 +112,10 @@ def report_shared_files(service, user, excluded_domains, csvw):
   Returns:
     List of File resources.
   """
-  result = []
+  
+  result = [ ]
   page_token = None
-  param = {  }
+  param = { }
   limit = 20
   if limit >= 0:
     param['maxResults'] = limit
@@ -125,10 +126,27 @@ def report_shared_files(service, user, excluded_domains, csvw):
       files = service.files().list(**param).execute()
       for item in files['items']:
         fileid = item['id']
-        shares = retrieve_permissions(service, fileid, excluded_domains)
-        for s in shares:
-          csvw.writerow([ user, item['id'], item['title'], item['mimeType'], item['modifiedDate'],
-            s['type'], s['id'], s['role'], s['name'], s['email'], s['domain'] ])
+        title = item['title']
+        my_file = False
+        first_owner = None
+        owners = item['owners']
+        for o in owners:
+          if not first_owner:
+            first_owner = o
+          if o.get('emailAddress') == user:
+            my_file = True
+            break
+        owner_name = 'unknown'
+        if first_owner:
+          owner_name = first_owner['displayName']
+        if my_file:
+          shares = retrieve_permissions(service, fileid, excluded_domains)
+          for s in shares:
+            csvw.writerow([ user, fileid, title, item['mimeType'], item['modifiedDate'],
+              s['type'], s['id'], s['role'], s['name'], s['email'], s['domain'] ])
+        else:
+          print("owner for %s is %s" % (title, owner_name))
+          pass
       # result.extend(files['items'][0:1])
       break
       page_token = files.get('nextPageToken')
@@ -139,6 +157,7 @@ def report_shared_files(service, user, excluded_domains, csvw):
       break
   return result
 
+
 # Find all permissions for all documents for given users
 def permission_report(users, excluded_domains, fname):
   init_mimetypes()
@@ -147,15 +166,12 @@ def permission_report(users, excluded_domains, fname):
     csvw.writerow(REPORT_KEYS)
     gauth = GoogleAuth()
     for sub_user in users:
-      gauth.ServiceAccountAuth(sub_user)
-      print("ok for %s" % sub_user)
+      try:
+        gauth.ServiceAccountAuth(sub_user)
+      except:
+        print("could not authenticate %s" % sub_user)
+        continue
       files = report_shared_files(gauth.service, sub_user, excluded_domains, csvw)
-  # dump_missing_mimetypes()
-
-def get_userinfo_email(gauth):
-  oauth_service = build('oauth2', 'v2', http=gauth.http)
-  userinfo = oauth_service.userinfo().get().execute()
-  return userinfo.get('email')
 
 EXCLUDED_DOMAINS = [
   'kentfieldschools.org',

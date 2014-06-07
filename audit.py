@@ -1,12 +1,16 @@
 #!/usr/bin/python2.7
 
 from __future__ import print_function
-from pydrive.auth import GoogleAuth
 from apiclient import errors
 from apiclient.discovery import build
+import csv
 import mimetypes
 import os
-import csv
+import sys
+
+PYDRIVE_FORKED_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'PyDrive')
+sys.path.append(PYDRIVE_FORKED_LOCATION)
+from pydrive.auth import GoogleAuth
 
 # A collection of file extensions we did not have mimetypes for
 missing = { }
@@ -76,11 +80,12 @@ def retrieve_permissions(service, file_id, excluded_domains):
     permissions = service.permissions().list(fileId=file_id).execute()
     result = permissions.get('items', [])
     for x in result:
+      role = x['role']
       stype = x['type']
       domain = x.get('domain', None)
       if stype == 'anyone' or domain not in excluded_domains:
         email = x.get('emailAddress', domain)
-        shares.append({ 'type': stype, 'id': x['id'], 'role': x['role'], 'domain': domain, 'name': x.get('name', ''), 'email': email })
+        shares.append({ 'type': stype, 'id': x['id'], 'role': role, 'domain': domain, 'name': x.get('name', ''), 'email': email })
   except errors.HttpError, error:
     print('An error occurred: %s' % error)
   return shares
@@ -135,12 +140,16 @@ def report_shared_files(service, user, excluded_domains, csvw):
   return result
 
 # Find all permissions for all documents for given users
-def permission_report(service, user, excluded_domains, fname):
+def permission_report(users, excluded_domains, fname):
   init_mimetypes()
   with open(fname, 'wb') as csvfile:
     csvw = csv.writer(csvfile)
     csvw.writerow(REPORT_KEYS)
-    files = report_shared_files(service, user, excluded_domains, csvw)
+    gauth = GoogleAuth()
+    for sub_user in users:
+      gauth.ServiceAccountAuth(sub_user)
+      print("ok for %s" % sub_user)
+      files = report_shared_files(gauth.service, sub_user, excluded_domains, csvw)
   # dump_missing_mimetypes()
 
 def get_userinfo_email(gauth):
@@ -154,9 +163,7 @@ EXCLUDED_DOMAINS = [
 ]
 
 if __name__ == "__main__":
-  gauth = GoogleAuth()
-  gauth.LocalWebserverAuth()  
-  user = get_userinfo_email(gauth)
-  permission_report(gauth.service, user, EXCLUDED_DOMAINS, 'audit.csv')
+  users = [ 'sthelen@kentfieldschools.org', 'jeynon@kentfieldschools.org' ]
+  permission_report(users, EXCLUDED_DOMAINS, 'audit.csv')
 
   

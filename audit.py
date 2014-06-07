@@ -113,44 +113,32 @@ def report_shared_files(service, user, excluded_domains, csvw):
     List of File resources.
   """
   
+  limit = -1 # for debugging, set this to a positive number
+  found = 0
   result = [ ]
   page_token = None
-  param = { }
-  limit = 20
-  if limit >= 0:
-    param['maxResults'] = limit
   while True:
     try:
+      # NOTE: 'me' in owners doesn't work
+      # Nor does using the 'About' resource (always returns same permissionId)
+      query = "'%s' in owners and trashed = false" % user
+      param = { 'q': query }
+      if limit > 0:
+        param['maxResults'] = limit
       if page_token:
         param['pageToken'] = page_token
+      print("%s list %r" % (user, param))
       files = service.files().list(**param).execute()
+      found += len(files)
       for item in files['items']:
         fileid = item['id']
         title = item['title']
-        my_file = False
-        first_owner = None
-        owners = item['owners']
-        for o in owners:
-          if not first_owner:
-            first_owner = o
-          if o.get('emailAddress') == user:
-            my_file = True
-            break
-        owner_name = 'unknown'
-        if first_owner:
-          owner_name = first_owner['displayName']
-        if my_file:
-          shares = retrieve_permissions(service, fileid, excluded_domains)
-          for s in shares:
-            csvw.writerow([ user, fileid, title, item['mimeType'], item['modifiedDate'],
-              s['type'], s['id'], s['role'], s['name'], s['email'], s['domain'] ])
-        else:
-          print("owner for %s is %s" % (title, owner_name))
-          pass
-      # result.extend(files['items'][0:1])
-      break
+        shares = retrieve_permissions(service, fileid, excluded_domains)
+        for s in shares:
+          csvw.writerow([ user, fileid, title, item['mimeType'], item['modifiedDate'],
+            s['type'], s['id'], s['role'], s['name'], s['email'], s['domain'] ])
       page_token = files.get('nextPageToken')
-      if not page_token:
+      if not page_token or (limit > 0 and found >= limit):
         break
     except errors.HttpError, error:
       print('An error occurred: %s' % error)

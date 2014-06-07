@@ -1,8 +1,11 @@
 client_config_backend: file
-client_config_file: client_secrets.json
+client_config_file: service_client_secrets.json
 save_credentials: False
 save_credentials_backend: file
 save_credentials_file: credentials.txt
+service_account: True
+service_account_email: 'xxxxxx@developer.gserviceaccount.com'
+service_account_key_file: privatekey.p12
 oauth_scope:
   - 'https://www.googleapis.com/auth/userinfo.email'
   - 'https://www.googleapis.com/auth/drive'

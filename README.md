@@ -10,6 +10,7 @@ Requirements
 - Python 2.7
 - PyYAML
 - (modified) PyDrive package for Google authentication.
+- PyCrypto 
 
 PyDrive modifications
 ---------------------
@@ -27,6 +28,8 @@ that is valid for the GDrive account of a "sub user":
 We also use new settings in settings.yaml:
 
 - service\_account: {{bool}} - True to use service account credentials
+- service\_account\_config\_file: {{str}} - service account JSON key file
+  (contains email and private key)
 - service\_account\_email: {{str}} - email address, like xxx@developer.gserviceaccount.com
 - service\_account\_key\_file: {{str}} - path to .p12 file containing private key
 

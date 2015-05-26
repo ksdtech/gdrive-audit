@@ -1,4 +1,7 @@
 *.pyc
+*.txt
+*.xls
+*.xlsx
 *.csv
 *.json
 *.p12

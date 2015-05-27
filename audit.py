@@ -187,6 +187,7 @@ class SharingReport:
 
   # Find all permissions for all documents for given users
   def audit_reports(self, users, share_types, prefix, suffix):
+    gauth = None
     for user in users:
       files = [ ]
       sub_user = "%s@%s" % (user, MY_DOMAIN)

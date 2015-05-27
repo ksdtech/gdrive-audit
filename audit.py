@@ -251,8 +251,12 @@ class SharingReport:
     print("sharing types not reported: ", ", ".join(self.share_types_skipped.keys()))
 
 if __name__ == "__main__":
-  with open('./example.txt') as f:
-    users = [line.rstrip('\n') for line in f]
+  users = [ ]
+  if len(sys.argv) > 1:
+    users = sys.argv[1:]
+  else:
+    with open('./example.txt') as f:
+      users = [line.rstrip('\n') for line in f]
   # print(users)
   share_types = [ 'domain', 'anyone' ]
   excluded_domains = [ 'kentstudents.org' ]
